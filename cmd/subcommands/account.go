@@ -658,32 +658,33 @@ func accountSub() []*cobra.Command {
 		Short: "verify message signature",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("DO NOT SUPPORT")
 
-			message := []byte(args[0])
-			if hashMessage {
-				message = common.Keccak256([]byte(message))
-			}
+			// message := []byte(args[0])
+			// if hashMessage {
+			// 	message = common.Keccak256([]byte(message))
+			// }
 
-			// compute message hash
-			hash := keystore.TextHash(message, useFixedLength)
-			signature, err := hex.DecodeString(args[1])
-			if err != nil {
-				fmt.Println("Invalid signature")
-				return err
-			}
+			// // compute message hash
+			// hash := keystore.TextHash(message, useFixedLength)
+			// signature, err := hex.DecodeString(args[1])
+			// if err != nil {
+			// 	fmt.Println("Invalid signature")
+			// 	return err
+			// }
 
-			addr, err := keystore.RecoverPubkey(hash, signature)
-			if err != nil {
-				return err
-			}
+			// addr, err := keystore.RecoverPubkey(hash, signature)
+			// if err != nil {
+			// 	return err
+			// }
 
-			result := make(map[string]interface{})
-			result["Message"] = args[0]
-			result["Signature"] = args[1]
-			result["Signer"] = addr.String()
+			// result := make(map[string]interface{})
+			// result["Message"] = args[0]
+			// result["Signature"] = args[1]
+			// result["Signer"] = addr.String()
 
-			asJSON, _ := json.Marshal(result)
-			fmt.Println(common.JSONPrettyFormat(string(asJSON)))
+			// asJSON, _ := json.Marshal(result)
+			// fmt.Println(common.JSONPrettyFormat(string(asJSON)))
 			return nil
 		},
 	}

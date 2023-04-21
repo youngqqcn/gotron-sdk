@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/fbsobreira/gotron-sdk/pkg/address"
 	"github.com/fbsobreira/gotron-sdk/pkg/common"
 	"github.com/fbsobreira/gotron-sdk/pkg/proto/core"
@@ -175,21 +174,21 @@ func UnmarshalPublic(pbk []byte) (*ecdsa.PublicKey, error) {
 	return &ecdsa.PublicKey{Curve: crypto.S256(), X: x, Y: y}, nil
 }
 
-func RecoverPubkey(hash []byte, signature []byte) (address.Address, error) {
+// func RecoverPubkey(hash []byte, signature []byte) (address.Address, error) {
 
-	if signature[64] >= 27 {
-		signature[64] -= 27
-	}
+// 	if signature[64] >= 27 {
+// 		signature[64] -= 27
+// 	}
 
-	sigPublicKey, err := secp256k1.RecoverPubkey(hash, signature)
-	if err != nil {
-		return nil, err
-	}
-	pubKey, err := UnmarshalPublic(sigPublicKey)
-	if err != nil {
-		return nil, err
-	}
+// 	sigPublicKey, err := secp256k1.RecoverPubkey(hash, signature)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	pubKey, err := UnmarshalPublic(sigPublicKey)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	addr := address.PubkeyToAddress(*pubKey)
-	return addr, nil
-}
+// 	addr := address.PubkeyToAddress(*pubKey)
+// 	return addr, nil
+// }

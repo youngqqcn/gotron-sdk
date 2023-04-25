@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -18,6 +19,8 @@ import (
 // create by yqq 2023-04-25
 
 // refactor: https://github.com/youngqqcn/tron-rpc/blob/main/service/client.go
+
+var zero32Bytes = "0000000000000000000000000000000000000000000000000000000000000000"
 
 // TransferEx  for TRX transfer, it's a refactor Transfer of transfer.go
 func (g *GrpcClient) TransferEx(senderKey *ecdsa.PrivateKey, toAddress string, amount int64) (string, error) {
@@ -116,8 +119,58 @@ func (g *GrpcClient) TransferAssetEx(senderKey *ecdsa.PrivateKey, AssetName, toA
 	return txid, err
 }
 
-// TransferContractEx for TRC20 transfer, it's a wrapper of contract.go TriggerConstantContract,
-func (g *GrpcClient) TransferContractEx(senderKey *ecdsa.PrivateKey, contractAddress string, data []byte, feeLimit int64) (string, error) {
+// Trc20Transfer is TRC20 transfer to token to address, to replace trc20.go TRC20Send
+func (g *GrpcClient) Trc20Transfer(fromKey *ecdsa.PrivateKey, toAddress, contractAddress string, amount *big.Int, feeLimit int64) (string, error) {
+	addrB, err := address.Base58ToAddress(toAddress)
+	if err != nil {
+		return "", err
+	}
+	ab := common.LeftPadBytes(amount.Bytes(), 32)
+	req := trc20TransferMethodSignature + zero32Bytes[len(addrB.Hex())-4:] + addrB.Hex()[4:]
+	req += common.Bytes2Hex(ab)
+
+	data, _ := hexutil.Decode(req)
+	return g.callContractEx(fromKey, contractAddress, data, feeLimit)
+}
+
+// Trc20Approve is TRC20 approve to token to address, to replace trc20.go TRC20Approve
+func (g *GrpcClient) Trc20Approve(fromKey *ecdsa.PrivateKey, spenderAddress, contractAddress string, amount *big.Int, feeLimit int64) (string, error) {
+	addrB, err := address.Base58ToAddress(spenderAddress)
+	if err != nil {
+		return "", err
+	}
+	ab := common.LeftPadBytes(amount.Bytes(), 32)
+	req := trc20TransferFromSignature + zero32Bytes[len(addrB.Hex())-4:] + addrB.Hex()[4:]
+	req += common.Bytes2Hex(ab)
+
+	data, _ := hexutil.Decode(req)
+	return g.callContractEx(fromKey, contractAddress, data, feeLimit)
+}
+
+// Trc20TransferFrom is TRC20  transferFrom(address sender, address recipient, uint256 amount)
+func (g *GrpcClient) Trc20TransferFrom(spenderKey *ecdsa.PrivateKey, ownerAddress, toAddress, contractAddress string, amount *big.Int, feeLimit int64) (string, error) {
+	owner, err := address.Base58ToAddress(ownerAddress)
+	if err != nil {
+		return "", err
+	}
+
+	toAddr, err := address.Base58ToAddress(toAddress)
+	if err != nil {
+		return "", err
+	}
+
+	ab := common.LeftPadBytes(amount.Bytes(), 32)
+	req := trc20ApproveMethodSignature
+	req += zero32Bytes[len(owner.Hex())-4:] + owner.Hex()[4:]   // owner(sender)
+	req += zero32Bytes[len(toAddr.Hex())-4:] + toAddr.Hex()[4:] // to (recipient)
+	req += common.Bytes2Hex(ab)
+
+	data, _ := hexutil.Decode(req)
+	return g.callContractEx(spenderKey, contractAddress, data, feeLimit)
+}
+
+// callContractEx call TRC20 contract , it's a wrapper of contract.go TriggerConstantContract,
+func (g *GrpcClient) callContractEx(senderKey *ecdsa.PrivateKey, contractAddress string, data []byte, feeLimit int64) (string, error) {
 	var err error
 	var txid string
 

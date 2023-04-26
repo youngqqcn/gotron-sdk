@@ -200,14 +200,33 @@ func (g *GrpcClient) callContractEx(senderKey *ecdsa.PrivateKey, contractAddress
 		transferTransaction.RawData.FeeLimit = feeLimit
 	}
 
+	// https://cn.developers.tron.network/docs/set-feelimit
+	if feeLimit == 0 {
+		return "", fmt.Errorf("feeLimit must be setted")
+
+		// NOTE: because some node doesn't support  estimateEnergy
+		// ct := &core.TriggerSmartContract{
+		// 	OwnerAddress:    transferContract.OwnerAddress,
+		// 	ContractAddress: transferContract.ContractAddress,
+		// 	Data:            data,
+		// }
+
+		// etm, err := g.estimateEnergy(ct)
+		// if err != nil {
+		// 	return txid, err
+		// }
+
+		// feeLimit = etm.EnergyRequired * (1.2 * 420)
+	}
+	// fmt.Printf("===> raw feeLimit %v\n", transferTransaction.RawData.FeeLimit)
+
 	hash, err := SignTransaction(transferTransaction, senderKey)
 	if err != nil {
 		return txid, err
 	}
 	txid = hexutil.Encode(hash)
 
-	result, err := g.Client.BroadcastTransaction(ctx,
-		transferTransaction)
+	result, err := g.Client.BroadcastTransaction(ctx, transferTransaction)
 	if err != nil {
 		// no return txid for failed tx
 		return "", err

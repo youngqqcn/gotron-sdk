@@ -140,7 +140,7 @@ func (g *GrpcClient) Trc20Approve(fromKey *ecdsa.PrivateKey, spenderAddress, con
 		return "", err
 	}
 	ab := common.LeftPadBytes(amount.Bytes(), 32)
-	req := trc20TransferFromSignature + zero32Bytes[len(addrB.Hex())-4:] + addrB.Hex()[4:]
+	req := trc20ApproveMethodSignature + zero32Bytes[len(addrB.Hex())-4:] + addrB.Hex()[4:]
 	req += common.Bytes2Hex(ab)
 
 	data, _ := hexutil.Decode(req)
@@ -160,7 +160,7 @@ func (g *GrpcClient) Trc20TransferFrom(spenderKey *ecdsa.PrivateKey, ownerAddres
 	}
 
 	ab := common.LeftPadBytes(amount.Bytes(), 32)
-	req := trc20ApproveMethodSignature
+	req := trc20TransferFromSignature
 	req += zero32Bytes[len(owner.Hex())-4:] + owner.Hex()[4:]   // owner(sender)
 	req += zero32Bytes[len(toAddr.Hex())-4:] + toAddr.Hex()[4:] // to (recipient)
 	req += common.Bytes2Hex(ab)

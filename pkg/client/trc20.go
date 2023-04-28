@@ -22,6 +22,7 @@ const (
 	trc20SymbolSignature         = "0x95d89b41"
 	trc20DecimalsSignature       = "0x313ce567"
 	trc20BalanceOf               = "0x70a08231"
+	trc20AllowanceSignature      = "0xdd62ed3e"
 )
 
 // TRC20Call make cosntant calll
@@ -163,6 +164,36 @@ func (g *GrpcClient) TRC20ContractBalance(addr, contractAddress string) (*big.In
 	}
 	if r == nil {
 		return nil, fmt.Errorf("contract address %s: invalid balance of %s", contractAddress, addr)
+	}
+	return r, nil
+}
+
+// TRC20ContractBalance get Address balance
+func (g *GrpcClient) TRC20GetAllowance(owner, spender, contractAddress string) (*big.Int, error) {
+	ownerAddr, err := address.Base58ToAddress(owner)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address %v", owner)
+	}
+	spenderAddr, err := address.Base58ToAddress(spender)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address %v", spender)
+	}
+
+	req := trc20AllowanceSignature
+	req += zero32Bytes[len(ownerAddr.Hex())-4:] + ownerAddr.Hex()[4:]   // owner
+	req += zero32Bytes[len(spenderAddr.Hex())-4:] + spenderAddr.Hex()[4:] // spender
+
+	result, err := g.TRC20Call("", contractAddress, req, true, 0)
+	if err != nil {
+		return nil, err
+	}
+	data := common.BytesToHexString(result.GetConstantResult()[0])
+	r, err := g.ParseTRC20NumericProperty(data)
+	if err != nil {
+		return nil, fmt.Errorf("contract address %s: %v", contractAddress, err)
+	}
+	if r == nil {
+		return nil, fmt.Errorf("contract address %s: invalid allowance of %s", contractAddress, spender)
 	}
 	return r, nil
 }
